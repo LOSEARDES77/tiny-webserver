@@ -123,15 +123,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 
 [[package]]
-name = "http-host"
-version = "0.1.0"
-dependencies = [
- "clap",
- "num_cpus",
- "tiny_http",
-]
-
-[[package]]
 name = "httpdate"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -204,6 +195,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tiny-webserver"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "num_cpus",
+ "tiny_http",
 ]
 
 [[package]]
