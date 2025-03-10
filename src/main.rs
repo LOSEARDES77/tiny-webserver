@@ -4,7 +4,6 @@ mod threadpool;
 use crate::handler::RequestHandler;
 use crate::threadpool::ThreadPool;
 use clap::Parser;
-use std::env::args;
 use std::io::ErrorKind;
 use std::sync::Arc;
 use tiny_http::Server;

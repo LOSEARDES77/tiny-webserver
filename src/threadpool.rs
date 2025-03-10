@@ -41,6 +41,7 @@ impl ThreadPool {
         let job = Box::new(f);
         self.sender.send(Message::NewJob(job)).unwrap();
     }
+    #[allow(unused)]
     pub fn join(mut self) {
         self.is_running = false;
         drop(self)
@@ -107,7 +108,7 @@ mod tests {
 
     #[test]
     fn join() {
-        let mut pool = ThreadPool::new(4);
+        let pool = ThreadPool::new(4);
         let result: u8 = 0;
         let a: u8 = 1;
         let b: u8 = 3;
