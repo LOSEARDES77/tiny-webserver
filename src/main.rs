@@ -1,11 +1,16 @@
+mod fmt;
 mod handler;
+mod logger;
 mod threadpool;
 
 use crate::handler::RequestHandler;
 use crate::threadpool::ThreadPool;
 use clap::Parser;
+use logger::{log_request, log_response};
+use std::env::args;
 use std::io::ErrorKind;
 use std::sync::Arc;
+use std::time::Instant;
 use tiny_http::Server;
 
 fn get_address() -> String {
@@ -38,6 +43,10 @@ struct Args {
     /// Root directory to use
     #[arg(short, long, default_value_t = String::from("."),)]
     root: String,
+
+    /// Show request headers
+    #[arg(short = 'H', long, default_value_t = false)]
+    show_headers: bool,
 }
 
 fn create_listener(host: &str, port: u16) -> Result<(Server, u16), std::io::Error> {
@@ -73,22 +82,30 @@ fn main() {
     let (listener, port) = create_listener(args.address.as_str(), args.port).unwrap();
     println!("Listening on: {}:{}", args.address, port);
 
-    let listner = Arc::new(listener);
+    let listener = Arc::new(listener);
 
     let pool = ThreadPool::new(args.num_workers);
 
     loop {
-        let listener = listner.clone();
+        let listener = listener.clone();
         let root = args.root.clone();
         let index_file_name = args.index_file_name.clone();
         let rq = listener.recv();
         pool.execute(move || {
             if let Ok(rq) = rq {
-                println!("Recived request: {:?}", rq);
+                let start_time = Instant::now();
+                log_request(&rq);
+                if args.show_headers {
+                    println!("--------------------");
+                    for header in rq.headers() {
+                        println!("{}: {}", header.field, header.value);
+                    }
+                    println!("--------------------");
+                }
                 let handler = RequestHandler::new(root, index_file_name.clone());
                 let rp = handler.get_response(&rq);
-                println!("Responding with: {:?}", rp.status_code());
-                rq.respond(rp).unwrap()
+                log_response(&rq, &rp, start_time.elapsed());
+                rq.respond(rp).unwrap();
             }
         })
     }
