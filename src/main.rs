@@ -13,20 +13,16 @@ use std::sync::Arc;
 use std::time::Instant;
 use tiny_http::Server;
 
-fn get_address() -> String {
-    if cfg!(debug_assertions) {
-        String::from("127.0.0.1")
-    } else {
-        String::from("0.0.0.0")
-    }
-}
-
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Address to use
-    #[arg(short, long, default_value_t = get_address())]
-    address: String,
+    /// Address to use (default: 127.0.0.1)
+    #[arg(short, long)]
+    address: Option<String>,
+
+    /// Expose to the public internet (Sets address to 0.0.0.0)
+    #[arg(short, long)]
+    expose: bool,
 
     /// Port to use
     #[arg(short, long, default_value_t = 80)]
@@ -78,9 +74,17 @@ fn create_listener(host: &str, port: u16) -> Result<(Server, u16), std::io::Erro
 
 fn main() {
     let args = Args::parse();
+    let addr;
+    if let Some(address) = args.address {
+        addr = address;
+    } else if args.expose {
+        addr = "0.0.0.0".to_string();
+    } else {
+        addr = "127.0.0.1".to_string();
+    }
 
-    let (listener, port) = create_listener(args.address.as_str(), args.port).unwrap();
-    println!("Listening on: {}:{}", args.address, port);
+    let (listener, port) = create_listener(&addr, args.port).unwrap();
+    println!("Web server listening at http://{}:{}/", addr, port);
 
     let listener = Arc::new(listener);
 
